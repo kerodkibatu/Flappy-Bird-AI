@@ -8,4 +8,4 @@ Monogame 2D Framework For C#
 Language Used: C#
 
 # Inspirations
-The Coding Train: github.com/codingtrain
+The Coding Train: [The Coding Train](www.youtube.com/@thecodingtrain)
