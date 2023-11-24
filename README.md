@@ -2,8 +2,8 @@
 My Attempt At A NeuroEvolutionary Flappy Bird AI
 
 # Libraries Used
-Encog Machine Learning Framework For C#
-Monogame 2D Framework For C#
+- Encog Machine Learning Framework For C#
+- Monogame 2D Framework For C#
 
 Language Used: C#
 
