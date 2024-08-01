@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace GaNN
@@ -19,7 +20,7 @@ namespace GaNN
         public int pCount = 250;
 
         public int GenerationNo = 0;
-        public GA(ContentManager _c,GameWindow _win)
+        public GA(ContentManager _c, GameWindow _win)
         {
             C = _c;
             GameWindow = _win;
@@ -29,52 +30,57 @@ namespace GaNN
             }
         }
 
-        public void nextGeneration(List<Pipe> pipes)
+        public void nextGeneration(ref Pipe pipe)
         {
             GenerationNo++;
             calculateFitness();
-            for (int i = 0; i < pCount; i++)
+
+
+            for (int i = 0; i < pCount * 0.5; i++)
             {
-                Birds.Add(pickOne());
+                var A = pickOne();
+                var B = pickOne();
+
+                var child = A.Cross(B);
+                child.mutate(0.05f);
+                Birds.Add(child);
             }
+
+            Birds.Add(SavedBirds.MaxBy(b => b.fitness));
+
+            while (Birds.Count < pCount)
+            {
+                var B = pickOne();
+                B.mutate(0.05f);
+                Birds.Add(B);
+            }
+
             SavedBirds.Clear();
-            pipes.Clear();
-            pipes.Add(new Pipe(GameWindow, C));
-            pipes.Add(new Pipe(GameWindow, C) { X = GameWindow.ClientBounds.Width * 2 });
+            pipe.Reset(true);
         }
         public Bird pickOne()
         {
             int index = 0;
-            double r = Random.NextDouble();
+            float r = (float)Random.NextDouble();
             while (r > 0)
             {
-                if (SavedBirds[index]!=null)
-                {
-                    r = r - SavedBirds[index].fitness;
-                }
-                else
-                {
-                    r = 0;
-                }
-                
+                r -= SavedBirds[index % SavedBirds.Count].fitness;
                 index++;
             }
             index--;
-            Bird bird = SavedBirds[index];
-            Bird child = new Bird(C,GameWindow,bird.Brain);
-            child.mutate(0.1);
-            return child;
+            // Todo: fix index loop
+            return new Bird(C, GameWindow, SavedBirds[index % SavedBirds.Count].Brain);
         }
         public void calculateFitness()
         {
             float sum = 0;
             foreach (var bird in SavedBirds)
             {
-                sum += bird.score;
+                sum += bird.score * bird.score;
             }
             foreach (var bird in SavedBirds)
             {
-                bird.fitness = bird.score / sum;
+                bird.fitness = bird.score * bird.score / sum;
             }
         }
     }

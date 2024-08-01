@@ -25,17 +25,19 @@ namespace GaNN
 
         Texture2D Tx;
 
-        Random Random => new Random();
+        Random Random = new Random(1);
 
         public Color C = Color.White;
         public Pipe(GameWindow Win,ContentManager C)
         {
             Window = Win;
             Tx = C.Load<Texture2D>("Pipe1");
-            Reset();
+            Reset(true);
         }
-        public void Reset()
+        public void Reset(bool deepReset = false)
         {
+            if(deepReset)
+                Random = new Random(1);
             X = Window.ClientBounds.Width+PipeWidth+10;
             int Z = Window.ClientBounds.Height / 10;
             Y = Random.Next(Z*2,Z*8);
@@ -61,14 +63,14 @@ namespace GaNN
             X -= Speed;
             Top.X = (int)X;
             Bottom.X = (int)X;
+            offScreen();
         }
-        public bool offScreen()
+        public void offScreen()
         {
             if (X+PipeWidth < 0)
             {
-                return true;
+                Reset();
             }
-            return false;
         }
     }
 }
