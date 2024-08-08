@@ -26,6 +26,7 @@ namespace GaNN
             Listener.KeyPressed += Listener_KeyPressed;
         }
         bool Paused = false;
+        bool ShowNetwork = false;
         private void Listener_KeyPressed(object sender, KeyboardEventArgs e)
         {
             if (e.Key == Keys.Right)
@@ -56,6 +57,12 @@ namespace GaNN
             {
                 SBO = !SBO;
             }
+
+            if (e.Key == Keys.N)
+            {
+                ShowNetwork = !ShowNetwork;
+            }
+
             if (e.Key == Keys.R)
             {
                 GA = new GA(Content, Window);
@@ -150,88 +157,91 @@ namespace GaNN
                 $"\nRemaining From Generation: {GA.Birds.Count}" +
                 $"\nShow best only?(M): {SBO}" +
                 $"\nPause/Resume(Space) : {Paused}" +
+                $"\nVisualize Network(N): {ShowNetwork}" +
                 $"\n(R) to Reset";
 
             _spriteBatch.DrawString(Font, Stuts, new Vector2(0,Window.ClientBounds.Height-Font.MeasureString(Stuts).Y*1.2f), Color.Black);
             _spriteBatch.FillRectangle(new Rectangle(0, Window.ClientBounds.Height - 20, Window.ClientBounds.Width, 20), Color.Gray);
 
             // Best Neural Network Visualization
-            var bestNetwork = GA.Birds[0].Brain;
-
-            var layerCount = bestNetwork.LayerCount;
-            int[] layerSizes = [.. (from layerIdx in Enumerable.Range(0, layerCount) select bestNetwork.Flat.GetLayerNeuronCount(layerIdx))];
-
-            float margin = 10;
-            float neuronRadius = 10;
-            float spacing = neuronRadius + 10;
-
-            RectangleF visArea = new(0, 10, Window.ClientBounds.Width, 300);
-
-            float xGap = (visArea.Width - margin * 2) / layerCount;
-
-            float x = visArea.X + xGap;
-
-            // Neuron visualization
-            for (int i = 0; i < layerCount; i++)
+            if (ShowNetwork)
             {
-                float nCount = layerSizes[i];
+                var bestNetwork = GA.Birds[0].Brain;
 
-                float yGap = (visArea.Height - margin * 2) / nCount;
+                var layerCount = bestNetwork.LayerCount;
+                int[] layerSizes = [.. (from layerIdx in Enumerable.Range(0, layerCount) select bestNetwork.Flat.GetLayerNeuronCount(layerIdx))];
 
+                float margin = 10;
+                float neuronRadius = 10;
+                float spacing = neuronRadius + 10;
 
-                
+                RectangleF visArea = new(0, 10, Window.ClientBounds.Width, 300);
 
-                for (int j = 0; j < nCount; j++)
+                float xGap = (visArea.Width - margin * 2) / layerCount;
+
+                float x = visArea.X + xGap;
+
+                // Neuron visualization
+                for (int i = 0; i < layerCount; i++)
                 {
-                    float y = visArea.Y + margin + yGap * (j + 0.5f);
+                    float nCount = layerSizes[i];
 
-                    // neuron color
-                    float activationValue = (float)bestNetwork.GetLayerOutput(i, j);
+                    float yGap = (visArea.Height - margin * 2) / nCount;
 
-                    // Calculate the interpolation value between blue and red
-                    float t = (activationValue + 1) / 2;
-                    Color neuronColor = new Color();
 
-                    if(t<0.5)
+
+
+                    for (int j = 0; j < nCount; j++)
                     {
-                        neuronColor = Color.Lerp(Color.Blue, Color.Black, t*2);
-                    }
-                    else
-                    {
-                        neuronColor = Color.Lerp(Color.Black, Color.Red, (t-0.5f)*2);
-                    }
+                        float y = visArea.Y + margin + yGap * (j + 0.5f);
 
-                    if (i < layerCount - 1)
-                    {
-                        float nCountNext = layerSizes[i + 1];
-                        float yGapNext = (visArea.Height - margin * 2) / nCountNext;
-                        for (int k = 0; k < nCountNext; k++)
+                        // neuron color
+                        float activationValue = (float)bestNetwork.GetLayerOutput(i, j);
+
+                        // Calculate the interpolation value between blue and red
+                        float t = (activationValue + 1) / 2;
+                        Color neuronColor = new Color();
+
+                        if (t < 0.5)
                         {
-                            float yNext = visArea.Y + margin + yGapNext * (k + 0.5f);
+                            neuronColor = Color.Lerp(Color.Blue, Color.Black, t * 2);
+                        }
+                        else
+                        {
+                            neuronColor = Color.Lerp(Color.Black, Color.Red, (t - 0.5f) * 2);
+                        }
 
-                            float weight = (float)bestNetwork.GetWeight(i, j, k);
+                        if (i < layerCount - 1)
+                        {
+                            float nCountNext = layerSizes[i + 1];
+                            float yGapNext = (visArea.Height - margin * 2) / nCountNext;
+                            for (int k = 0; k < nCountNext; k++)
+                            {
+                                float yNext = visArea.Y + margin + yGapNext * (k + 0.5f);
 
-                            // Calculate the interpolation value between blue and red
-                            float t1 = (weight + 1) / 2;
-                            Color weightColor = Color.Lerp(Color.Blue, Color.Red, t1);
+                                float weight = (float)bestNetwork.GetWeight(i, j, k);
 
-                            _spriteBatch.DrawLine(new Vector2(x, y), new Vector2(x + xGap, yNext), weightColor, 2,0);
-                            
+                                // Calculate the interpolation value between blue and red
+                                float t1 = (weight + 1) / 2;
+                                Color weightColor = Color.Lerp(Color.Blue, Color.Red, t1);
+
+                                _spriteBatch.DrawLine(new Vector2(x, y), new Vector2(x + xGap, yNext), weightColor, 2, 0);
+
+                            }
+                        }
+                        // Draw the neuron
+                        _spriteBatch.DrawCircle(new Vector2(x, y), radius: neuronRadius, sides: 10, color: neuronColor, thickness: neuronRadius);
+                        // Draw the value if the mouse is over the neuron
+                        if (new RectangleF(x - neuronRadius, y - neuronRadius, neuronRadius * 2, neuronRadius * 2).Contains(Mouse.GetState().Position))
+                        {
+                            // Show the activation value
+                            var txt = activationValue.ToString("0.00");
+                            _spriteBatch.DrawString(Font, txt, new Vector2(x, visArea.Bottom + 10), Color.White, 0, Font.MeasureString(txt) / 2, 1.5f, SpriteEffects.None, 0);
                         }
                     }
-                    // Draw the neuron
-                    _spriteBatch.DrawCircle(new Vector2(x, y), radius: neuronRadius, sides: 10, color: neuronColor, thickness: neuronRadius);
-                    // Draw the value if the mouse is over the neuron
-                    if (new RectangleF(x - neuronRadius, y - neuronRadius, neuronRadius * 2, neuronRadius * 2).Contains(Mouse.GetState().Position))
-                    {
-                        // Show the activation value
-                        var txt = activationValue.ToString("0.00");
-                        _spriteBatch.DrawString(Font,txt, new Vector2(x, visArea.Bottom+10), Color.White, 0, Font.MeasureString(txt)/2, 1.5f, SpriteEffects.None,0);
-                    }
+                    x += xGap;
                 }
-                x += xGap;
             }
-
             _spriteBatch.End();
             base.Draw(gameTime);
         }
