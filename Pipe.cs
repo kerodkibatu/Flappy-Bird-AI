@@ -14,7 +14,7 @@ namespace GaNN
         public Rectangle Top;
         public Rectangle Bottom;
 
-        public float PipeWidth = 50;
+        public float PipeWidth = 100;
         public float Spacing = 100;
         public float Speed = 7f;
 

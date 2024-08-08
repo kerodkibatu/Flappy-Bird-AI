@@ -24,7 +24,7 @@ namespace GaNN
         public float Gravity = .8f;
         public float Lift = 120f;
 
-        float Xpos = 50;
+        float Xpos = 100;
 
         public float Rotation = 0f;
 
@@ -39,7 +39,7 @@ namespace GaNN
         public ContentManager C { get; }
         public GameWindow Window { get; }
 
-        public float CollisionRadius = 25f;
+        public float CollisionRadius = 30f;
 
         public bool Alive = true;
 
@@ -97,7 +97,7 @@ namespace GaNN
         public void Draw(SpriteBatch Batch)
         {
             Batch.Draw(TX, Position, null, Color.White, Rotation, Origin, .08f, SpriteEffects.None, 0);
-            //Batch.DrawCircle(Position, CollisionRadius, 15, Color.White);
+            Batch.DrawCircle(Position, CollisionRadius, 15, Color.White);
         }
         public void Update(Pipe Pipe)
         {
@@ -110,7 +110,7 @@ namespace GaNN
             Acceleration *= 0;
             #endregion
             float AngleDelta = Velocity;
-            Rotation = Math.Clamp(AngleDelta / 10, MathHelper.ToRadians(-60), MathHelper.ToRadians(90));
+            Rotation = MathHelper.Lerp(Rotation, Math.Clamp(AngleDelta / 10, MathHelper.ToRadians(-60), MathHelper.ToRadians(90)), 0.2f);
             if (Pipe.Top.ToRectangleF().DistanceTo(Position.ToPoint()) < CollisionRadius ||
                     Pipe.Bottom.ToRectangleF().DistanceTo(Position.ToPoint()) < CollisionRadius)
             {
